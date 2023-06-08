@@ -1,10 +1,6 @@
 package com.laryhills.studentsystem.controller;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Optional;
-import java.util.List;
+import java.util.*;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -57,8 +53,7 @@ public class StudentController {
 
     Student addedStudent = studentService.addNewStudent(student);
 
-    ;
-    List<Student> data = Arrays.asList(addedStudent);
+    List<Student> data = Collections.singletonList(addedStudent);
     Map<String, Object> response = ResponseUtils.createResponse("success", "Student added successfully", data);
     return ResponseEntity.ok(response);
   }
@@ -70,13 +65,13 @@ public class StudentController {
       Long id = Long.valueOf(studentId);
       Optional<Student> studentOptional = studentService.findStudentById(id);
 
-      if (!studentOptional.isPresent()) {
+      if (studentOptional.isEmpty()) {
         Map<String, Object> response = ResponseUtils.createResponse("failed", "Student not found", null);
         return ResponseEntity.badRequest().body(response);
       }
 
       Student student = studentOptional.get();
-      List<Student> data = Arrays.asList(student);
+      List<Student> data = List.of(student);
       Map<String, Object> response = ResponseUtils.createResponse("success", "Student retrieved successfully", data);
       return ResponseEntity.ok(response);
     } catch (NumberFormatException e) {
@@ -107,7 +102,7 @@ public class StudentController {
       Long id = Long.valueOf(studentId);
       Optional<Student> studentOptional = studentService.findStudentById(id);
 
-      if (!studentOptional.isPresent()) {
+      if (studentOptional.isEmpty()) {
         Map<String, Object> response = ResponseUtils.createResponse("failed", "Student not found", null);
         return ResponseEntity.badRequest().body(response);
       }
@@ -130,24 +125,24 @@ public class StudentController {
       Long id = Long.valueOf(studentId);
       Optional<Student> studentOptional = studentService.findStudentById(id);
 
-      if (!studentOptional.isPresent()) {
+      if (studentOptional.isEmpty()) {
         Map<String, Object> response = ResponseUtils.createResponse("failed", "Student not found", null);
         return ResponseEntity.badRequest().body(response);
       }
 
       Student existingStudent = studentOptional.get();
 
-      if (student.getAddress() != null && !student.getAddress().isEmpty()) {
+      if (!student.getAddress().isEmpty()) {
         existingStudent.setAddress(student.getAddress());
       }
 
-      if (student.getPhone() != null && !student.getPhone().isEmpty()) {
+      if (!student.getPhone().isEmpty()) {
         existingStudent.setPhone(student.getPhone());
       }
 
       Student updatedStudent = studentService.addNewStudent(existingStudent);
 
-      List<Student> data = Arrays.asList(updatedStudent);
+      List<Student> data = Collections.singletonList(updatedStudent);
       Map<String, Object> response = ResponseUtils.createResponse("success", "Student updated successfully", data);
       return ResponseEntity.ok(response);
 
