@@ -65,19 +65,33 @@ public class WebSecurityConfig {
   // resource without proper authentication.
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    // Disable CSRF protection
     http.csrf(AbstractHttpConfigurer::disable)
-        .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(auth -> auth.requestMatchers("/api/v2/auth/**").permitAll()
-            .requestMatchers("/api/v2/test/**").permitAll()
-//            .requestMatchers("/api/v2/students/**").permitAll()
-            .anyRequest().authenticated());
 
+      // Configure authentication entry point for handling authentication failures
+      .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+
+      // Set session creation policy to STATELESS
+      .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+      // Define access rules for different URLs and endpoints
+      .authorizeHttpRequests(auth ->
+          auth.requestMatchers("/", "/api/v2", "/error").permitAll()  // Permit access to /, /api/v2 without authentication
+            .requestMatchers("/api/v2/auth/**").permitAll() // Permit access to /api/v2/auth/** without authentication
+            .requestMatchers("/api/v2/test/**").permitAll() // Permit access to /api/v2/test/** without authentication
+//            .requestMatchers("/api/v2/students/**").permitAll() // Example of commented-out access rule
+            .anyRequest().authenticated() // Require authentication for any other request
+      );
+
+    // Configure authentication provider
     http.authenticationProvider(authenticationProvider());
 
+    // Add custom filter before the UsernamePasswordAuthenticationFilter
     http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
+    // Build and return the SecurityFilterChain
     return http.build();
   }
+
 
 }

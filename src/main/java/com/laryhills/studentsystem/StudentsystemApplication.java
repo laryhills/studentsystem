@@ -5,11 +5,13 @@ import java.util.Map;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.laryhills.studentsystem.utils.response.ResponseUtils;
 
+@CrossOrigin(origins = "*", maxAge = 3600)
 @SpringBootApplication
 @RestController
 public class StudentsystemApplication {
