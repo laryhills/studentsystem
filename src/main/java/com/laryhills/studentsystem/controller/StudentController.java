@@ -3,11 +3,12 @@ package com.laryhills.studentsystem.controller;
 import java.util.*;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.laryhills.studentsystem.model.Student;
 import com.laryhills.studentsystem.service.StudentService;
-import com.laryhills.studentsystem.utils.ResponseUtils;
+import com.laryhills.studentsystem.utils.response.ResponseUtils;
 
 import jakarta.validation.Valid;
 
@@ -24,6 +25,7 @@ public class StudentController {
   }
 
   @GetMapping
+  @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
   public ResponseEntity<Map<String, Object>> getAllStudents() {
     List<Student> students = studentService.getAllStudents();
 
@@ -37,6 +39,7 @@ public class StudentController {
   }
 
   @PostMapping
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Map<String, Object>> addNewStudent(@Valid @RequestBody Student student) {
     Optional<Student> studentOptional = studentService.findStudentByEmail(student.getEmail());
 
@@ -53,6 +56,7 @@ public class StudentController {
   }
 
   @GetMapping("/{studentId}")
+  @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
   public ResponseEntity<Map<String, Object>> getStudentById(@PathVariable("studentId") String studentId) {
     // System.out.println("studentId: " + studentId);
     try {
@@ -77,6 +81,7 @@ public class StudentController {
   }
 
   @GetMapping("/search/{searchTerm}")
+  @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
   public ResponseEntity<Map<String, Object>> searchStudents(@PathVariable("searchTerm") String searchTerm) {
     Optional<List<Student>> studentOptional = studentService.findStudentBySearchTerm(searchTerm);
 
@@ -91,6 +96,7 @@ public class StudentController {
   }
 
   @DeleteMapping("/{studentId}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Map<String, Object>> deleteStudentById(@PathVariable("studentId") String studentId) {
     try {
       Long id = Long.valueOf(studentId);
@@ -113,6 +119,7 @@ public class StudentController {
   }
 
   @PutMapping("/{studentId}")
+  @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Map<String, Object>> updateStudentById(@PathVariable("studentId") String studentId,
       @RequestBody Student student) {
     try {
