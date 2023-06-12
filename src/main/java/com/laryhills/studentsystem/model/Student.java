@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -20,6 +21,10 @@ import lombok.Data;
 
 @Entity
 @Data
+@Table(name = "student", uniqueConstraints = {
+    @jakarta.persistence.UniqueConstraint(columnNames = "email"),
+    @jakarta.persistence.UniqueConstraint(columnNames = "phone")
+})
 public class Student {
 
   @Id

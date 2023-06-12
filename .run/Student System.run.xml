@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Student System" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.laryhills.studentsystem.StudentsystemApplication" />
+    <module name="studentsystem" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
