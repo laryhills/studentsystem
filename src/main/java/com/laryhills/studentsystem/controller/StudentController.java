@@ -10,6 +10,7 @@ import com.laryhills.studentsystem.model.Student;
 import com.laryhills.studentsystem.service.StudentService;
 import com.laryhills.studentsystem.utils.response.ResponseUtils;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -26,94 +27,125 @@ public class StudentController {
 
   @GetMapping
   @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
-  public ResponseEntity<Map<String, Object>> getAllStudents() {
+  public ResponseEntity<Map<String, Object>> getAllStudents(HttpServletRequest request) {
+
+    // get token from request attributes
+    String newToken = (String) request.getAttribute("newToken");
+
     List<Student> students = studentService.getAllStudents();
 
     if (students.isEmpty()) {
-      Map<String, Object> response = ResponseUtils.createResponse("success", "No student found", new ArrayList<>());
+      Map<String, Object> response = ResponseUtils.createResponse("success", "No student found", new ArrayList<>(),
+          newToken);
       return ResponseEntity.ok(response);
     }
 
-    Map<String, Object> response = ResponseUtils.createResponse("success", "Students retrieved successfully", students);
+    Map<String, Object> response = ResponseUtils.createResponse("success", "Students retrieved successfully", students,
+        newToken);
     return ResponseEntity.ok(response);
   }
 
   @PostMapping
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Map<String, Object>> addNewStudent(@Valid @RequestBody Student student) {
+  public ResponseEntity<Map<String, Object>> addNewStudent(@Valid @RequestBody Student student,
+      HttpServletRequest request) {
+
+    // get token from request attributes
+    String newToken = (String) request.getAttribute("newToken");
+
     Optional<Student> studentOptional = studentService.findStudentByEmail(student.getEmail());
 
     if (studentOptional.isPresent()) {
-      Map<String, Object> response = ResponseUtils.createResponse("failed", "Email already taken", null);
+      Map<String, Object> response = ResponseUtils.createResponse("failed", "Email already taken", null, newToken);
       return ResponseEntity.badRequest().body(response);
     }
 
     Student addedStudent = studentService.addNewStudent(student);
 
     List<Student> data = Collections.singletonList(addedStudent);
-    Map<String, Object> response = ResponseUtils.createResponse("success", "Student added successfully", data);
+    Map<String, Object> response = ResponseUtils.createResponse("success", "Student added successfully", data,
+        newToken);
     return ResponseEntity.ok(response);
   }
 
   @GetMapping("/{studentId}")
   @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
-  public ResponseEntity<Map<String, Object>> getStudentById(@PathVariable("studentId") String studentId) {
+  public ResponseEntity<Map<String, Object>> getStudentById(@PathVariable("studentId") String studentId,
+      HttpServletRequest request) {
+
+    // get token from request attributes
+    String newToken = (String) request.getAttribute("newToken");
+
     // System.out.println("studentId: " + studentId);
     try {
       Long id = Long.valueOf(studentId);
       Optional<Student> studentOptional = studentService.findStudentById(id);
 
       if (studentOptional.isEmpty()) {
-        Map<String, Object> response = ResponseUtils.createResponse("failed", "Student not found", null);
+        Map<String, Object> response = ResponseUtils.createResponse("failed", "Student not found", null, newToken);
         return ResponseEntity.badRequest().body(response);
       }
 
       Student student = studentOptional.get();
       List<Student> data = List.of(student);
-      Map<String, Object> response = ResponseUtils.createResponse("success", "Student retrieved successfully", data);
+      Map<String, Object> response = ResponseUtils.createResponse("success", "Student retrieved successfully", data,
+          newToken);
       return ResponseEntity.ok(response);
     } catch (NumberFormatException e) {
       // Handle the error caused by invalid studentId format
       Map<String, Object> response = ResponseUtils.createResponse("error", "Invalid studentId format: " + studentId,
-          null);
+          null, newToken);
       return ResponseEntity.badRequest().body(response);
     }
   }
 
   @GetMapping("/search/{searchTerm}")
   @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
-  public ResponseEntity<Map<String, Object>> searchStudents(@PathVariable("searchTerm") String searchTerm) {
+  public ResponseEntity<Map<String, Object>> searchStudents(@PathVariable("searchTerm") String searchTerm,
+      HttpServletRequest request) {
+
+    // get token from request attributes
+    String newToken = (String) request.getAttribute("newToken");
+
     Optional<List<Student>> studentOptional = studentService.findStudentBySearchTerm(searchTerm);
 
     if (studentOptional.isEmpty() || studentOptional.get().isEmpty()) {
-      Map<String, Object> response = ResponseUtils.createResponse("failed", "No student found", new ArrayList<>());
+      Map<String, Object> response = ResponseUtils.createResponse("failed", "No student found", new ArrayList<>(),
+          newToken);
       return ResponseEntity.ok(response);
     }
 
     List<Student> students = studentOptional.get();
-    Map<String, Object> response = ResponseUtils.createResponse("success", "Students retrieved successfully", students);
+    Map<String, Object> response = ResponseUtils.createResponse("success", "Students retrieved successfully", students,
+        newToken);
     return ResponseEntity.ok(response);
   }
 
   @DeleteMapping("/{studentId}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Map<String, Object>> deleteStudentById(@PathVariable("studentId") String studentId) {
+  public ResponseEntity<Map<String, Object>> deleteStudentById(@PathVariable("studentId") String studentId,
+      HttpServletRequest request) {
+
+    // get token from request attributes
+    String newToken = (String) request.getAttribute("newToken");
+
     try {
       Long id = Long.valueOf(studentId);
       Optional<Student> studentOptional = studentService.findStudentById(id);
 
       if (studentOptional.isEmpty()) {
-        Map<String, Object> response = ResponseUtils.createResponse("failed", "Student not found", null);
+        Map<String, Object> response = ResponseUtils.createResponse("failed", "Student not found", null, newToken);
         return ResponseEntity.badRequest().body(response);
       }
 
       studentService.deleteStudentById(id);
-      Map<String, Object> response = ResponseUtils.createResponse("success", "Student deleted successfully", null);
+      Map<String, Object> response = ResponseUtils.createResponse("success", "Student deleted successfully", null,
+          newToken);
       return ResponseEntity.ok(response);
     } catch (NumberFormatException e) {
       // Handle the error caused by invalid studentId format
       Map<String, Object> response = ResponseUtils.createResponse("error", "Invalid studentId format: " + studentId,
-          null);
+          null, newToken);
       return ResponseEntity.badRequest().body(response);
     }
   }
@@ -121,13 +153,17 @@ public class StudentController {
   @PutMapping("/{studentId}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<Map<String, Object>> updateStudentById(@PathVariable("studentId") String studentId,
-      @RequestBody Student student) {
+      @RequestBody Student student, HttpServletRequest request) {
+
+    // get token from request attributes
+    String newToken = (String) request.getAttribute("newToken");
+
     try {
       Long id = Long.valueOf(studentId);
       Optional<Student> studentOptional = studentService.findStudentById(id);
 
       if (studentOptional.isEmpty()) {
-        Map<String, Object> response = ResponseUtils.createResponse("failed", "Student not found", null);
+        Map<String, Object> response = ResponseUtils.createResponse("failed", "Student not found", null, newToken);
         return ResponseEntity.badRequest().body(response);
       }
 
@@ -144,13 +180,14 @@ public class StudentController {
       Student updatedStudent = studentService.addNewStudent(existingStudent);
 
       List<Student> data = Collections.singletonList(updatedStudent);
-      Map<String, Object> response = ResponseUtils.createResponse("success", "Student updated successfully", data);
+      Map<String, Object> response = ResponseUtils.createResponse("success", "Student updated successfully", data,
+          newToken);
       return ResponseEntity.ok(response);
 
     } catch (NumberFormatException e) {
       // Handle the error caused by invalid studentId format
       Map<String, Object> response = ResponseUtils.createResponse("error", "Invalid studentId format: " + studentId,
-          null);
+          null, newToken);
       return ResponseEntity.badRequest().body(response);
     }
   }
