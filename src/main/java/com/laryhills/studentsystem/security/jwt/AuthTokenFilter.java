@@ -44,14 +44,15 @@ public class AuthTokenFilter extends OncePerRequestFilter {
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
     try {
-      // skip for login and register requests
-      if (request.getRequestURI().equals("/api/v2/auth/login")
-          || request.getRequestURI().equals("/api/v2/auth/register")) {
+      String path = request.getRequestURI();
+      String jwt = parseJwt(request);
+
+      // skip for login and register requests, "/", "/api/v2", "/error"
+      if (path.equals("/api/v2/auth/login") || path.equals("/api/v2/auth/register") || path.equals("/")
+          || path.equals("/api/v2") || path.equals("/error")) {
         filterChain.doFilter(request, response);
         return;
       }
-
-      String jwt = parseJwt(request);
 
       if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
         String username = jwtUtils.getUserNameFromJwtToken(jwt);
