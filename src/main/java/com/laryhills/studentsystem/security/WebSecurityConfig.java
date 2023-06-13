@@ -14,10 +14,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.web.access.channel.ChannelProcessingFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.laryhills.studentsystem.security.jwt.AuthEntryPointJwt;
 import com.laryhills.studentsystem.security.jwt.AuthTokenFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableMethodSecurity
@@ -66,25 +70,31 @@ public class WebSecurityConfig {
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     // Disable CSRF protection
-    http.csrf(AbstractHttpConfigurer::disable)
+    http.csrf(AbstractHttpConfigurer::disable).cors(AbstractHttpConfigurer::disable)
 
-      // Configure authentication entry point for handling authentication failures
-      .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+        // Configure authentication entry point for handling authentication failures
+        .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
 
-      // Set session creation policy to STATELESS
-      .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        // Set session creation policy to STATELESS
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-      // Define access rules for different URLs and endpoints
-      .authorizeHttpRequests(auth ->
-          auth.requestMatchers("/", "/api/v2", "/error").permitAll()  // Permit access to /, /api/v2 without authentication
+        // Define access rules for different URLs and endpoints
+        .authorizeHttpRequests(auth -> auth.requestMatchers("/", "/api/v2", "/error").permitAll() // Permit access to /,
+                                                                                                  // /api/v2 without
+                                                                                                  // authentication
             .requestMatchers("/api/v2/auth/**").permitAll() // Permit access to /api/v2/auth/** without authentication
             .requestMatchers("/api/v2/test/**").permitAll() // Permit access to /api/v2/test/** without authentication
-//            .requestMatchers("/api/v2/students/**").permitAll() // Example of commented-out access rule
+            // .requestMatchers("/api/v2/students/**").permitAll() // Example of
+            // commented-out access rule
             .anyRequest().authenticated() // Require authentication for any other request
-      );
+        );
 
     // Configure authentication provider
     http.authenticationProvider(authenticationProvider());
+
+    // Add the CorsFilter before other filters
+    http.addFilterBefore(corsFilter(), ChannelProcessingFilter.class);
+
 
     // Add custom filter before the UsernamePasswordAuthenticationFilter
     http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -93,5 +103,15 @@ public class WebSecurityConfig {
     return http.build();
   }
 
+  @Bean
+  public CorsFilter corsFilter() {
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    CorsConfiguration config = new CorsConfiguration();
+    config.addAllowedOrigin("*"); // Allow requests from any origin
+    config.addAllowedMethod("*"); // Allow all HTTP methods
+    config.addAllowedHeader("*"); // Allow all headers
+    source.registerCorsConfiguration("/**", config); // Apply CORS configuration to all paths
+    return new CorsFilter(source);
+  }
 
 }
