@@ -15,6 +15,8 @@ public class UserDetailsImpl implements UserDetails {
 
   private Long id;
 
+  private String name;
+
   private String username;
 
   private String email;
@@ -25,9 +27,10 @@ public class UserDetailsImpl implements UserDetails {
 
   private Collection<? extends org.springframework.security.core.GrantedAuthority> authorities;
 
-  public UserDetailsImpl(Long id, String username, String email, String password,
+  public UserDetailsImpl(Long id, String name, String username, String email, String password,
       Collection<? extends org.springframework.security.core.GrantedAuthority> authorities) {
     this.id = id;
+    this.name = name;
     this.username = username;
     this.email = email;
     this.password = password;
@@ -39,7 +42,7 @@ public class UserDetailsImpl implements UserDetails {
         .map(role -> new org.springframework.security.core.authority.SimpleGrantedAuthority(role.getName().name()))
         .collect(Collectors.toList());
 
-    return new UserDetailsImpl(user.getId(), user.getUsername(), user.getEmail(), user.getPassword(), authorities);
+    return new UserDetailsImpl(user.getId(), user.getName(),user.getUsername(),  user.getEmail(), user.getPassword(), authorities);
   }
 
   @Override
@@ -50,6 +53,8 @@ public class UserDetailsImpl implements UserDetails {
   public Long getId() {
     return id;
   }
+
+  public String getName() {return name;}
 
   public String getEmail() {
     return email;
@@ -94,4 +99,5 @@ public class UserDetailsImpl implements UserDetails {
     UserDetailsImpl user = (UserDetailsImpl) o;
     return Objects.equals(id, user.id);
   }
+
 }

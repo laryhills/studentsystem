@@ -72,6 +72,7 @@ public class AuthController {
     Map<String, Object> response = ResponseUtils.createResponse("success",
         "User logged in successfully!", Collections.singletonList(new JwtResponse(
             userDetails.getId(),
+            userDetails.getName(),
             userDetails.getUsername(),
             userDetails.getEmail(),
             roles)),
@@ -93,7 +94,7 @@ public class AuthController {
     }
 
     // Create new user's account
-    User user = new User(signUpRequest.getUsername(),
+    User user = new User(signUpRequest.getName(), signUpRequest.getUsername(),
         signUpRequest.getEmail(),
         encoder.encode(signUpRequest.getPassword()));
 
