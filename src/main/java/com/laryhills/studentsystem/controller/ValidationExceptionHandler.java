@@ -25,7 +25,7 @@ public class ValidationExceptionHandler {
     List<FieldError> fieldErrors = bindingResult.getFieldErrors();
 
     Map<String, Object> response = new HashMap<>();
-    response.put("status", "failed");
+    response.put("status", "error");
     response.put("message", "Validation error");
 
     List<Map<String, String>> errors = new ArrayList<>();

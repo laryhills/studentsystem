@@ -27,22 +27,38 @@ public class StudentController {
 
   @GetMapping
   @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
-  public ResponseEntity<Map<String, Object>> getAllStudents(HttpServletRequest request) {
+  public ResponseEntity<Map<String, Object>> getAllStudents(@RequestParam(required = false) String search,
+      HttpServletRequest request) {
 
     // get token from request attributes
     String newToken = (String) request.getAttribute("newToken");
 
-    List<Student> students = studentService.getAllStudents();
+    if (search != null) {
+      Optional<List<Student>> studentOptional = studentService.findStudentBySearchTerm(search);
 
-    if (students.isEmpty()) {
-      Map<String, Object> response = ResponseUtils.createResponse("success", "No student found", new ArrayList<>(),
+      if (studentOptional.isEmpty()) {
+        Map<String, Object> response = ResponseUtils.createResponse("failed", "Student not found", null, newToken);
+        return ResponseEntity.badRequest().body(response);
+      }
+
+      List<Student> students = studentOptional.get();
+      Map<String, Object> response = ResponseUtils.createResponse("success", "Student retrieved successfully", students,
+          newToken);
+      return ResponseEntity.ok(response);
+    } else {
+      List<Student> students = studentService.getAllStudents();
+
+      if (students.isEmpty()) {
+        Map<String, Object> response = ResponseUtils.createResponse("success", "No students found",
+            new ArrayList<>(), newToken);
+        return ResponseEntity.ok(response);
+      }
+
+      Map<String, Object> response = ResponseUtils.createResponse("success", "Students retrieved successfully",
+          students,
           newToken);
       return ResponseEntity.ok(response);
     }
-
-    Map<String, Object> response = ResponseUtils.createResponse("success", "Students retrieved successfully", students,
-        newToken);
-    return ResponseEntity.ok(response);
   }
 
   @PostMapping
@@ -97,28 +113,6 @@ public class StudentController {
           null, newToken);
       return ResponseEntity.badRequest().body(response);
     }
-  }
-
-  @GetMapping("/search/{searchTerm}")
-  @PreAuthorize("hasRole('USER') or hasRole('MODERATOR') or hasRole('ADMIN')")
-  public ResponseEntity<Map<String, Object>> searchStudents(@PathVariable("searchTerm") String searchTerm,
-      HttpServletRequest request) {
-
-    // get token from request attributes
-    String newToken = (String) request.getAttribute("newToken");
-
-    Optional<List<Student>> studentOptional = studentService.findStudentBySearchTerm(searchTerm);
-
-    if (studentOptional.isEmpty() || studentOptional.get().isEmpty()) {
-      Map<String, Object> response = ResponseUtils.createResponse("failed", "No student found", new ArrayList<>(),
-          newToken);
-      return ResponseEntity.ok(response);
-    }
-
-    List<Student> students = studentOptional.get();
-    Map<String, Object> response = ResponseUtils.createResponse("success", "Students retrieved successfully", students,
-        newToken);
-    return ResponseEntity.ok(response);
   }
 
   @DeleteMapping("/{studentId}")

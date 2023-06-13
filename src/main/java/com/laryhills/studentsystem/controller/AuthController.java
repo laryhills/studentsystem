@@ -3,7 +3,7 @@ package com.laryhills.studentsystem.controller;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.laryhills.studentsystem.model.Student;
+
 import com.laryhills.studentsystem.utils.response.ResponseUtils;
 import jakarta.validation.Valid;
 
@@ -36,6 +36,7 @@ import com.laryhills.studentsystem.utils.response.MessageResponse;
 
 // remember to add roles to  database
 // use WebSecurityConfig to specify routes
+// use AuthTokenFilter to specify login and register routes
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController

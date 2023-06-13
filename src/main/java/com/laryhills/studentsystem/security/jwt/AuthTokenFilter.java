@@ -20,6 +20,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AuthTokenFilter extends OncePerRequestFilter {
   @Autowired
@@ -41,6 +44,13 @@ public class AuthTokenFilter extends OncePerRequestFilter {
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
     try {
+      // skip for login and register requests
+      if (request.getRequestURI().equals("/api/v2/auth/login")
+          || request.getRequestURI().equals("/api/v2/auth/register")) {
+        filterChain.doFilter(request, response);
+        return;
+      }
+
       String jwt = parseJwt(request);
 
       if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
@@ -57,29 +67,55 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         // add new token to response body
         String newToken = jwtUtils.generateTokenFromUsername(userDetails.getUsername());
 
-        /* 
-        // Create a TokenResponse object with the new token
-        TokenResponse responseBody = new TokenResponse(newToken);
-
-        // Convert the TokenResponse object to JSON
-        ObjectMapper objectMapper = new ObjectMapper();
-        String jsonResponse = objectMapper.writeValueAsString(responseBody);
-
-        // Set the response content type and write the response body
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.getOutputStream().write(jsonResponse.getBytes(StandardCharsets.UTF_8));
-        response.getOutputStream().flush(); 
-        */
+        /*
+         * // Create a TokenResponse object with the new token
+         * TokenResponse responseBody = new TokenResponse(newToken);
+         * 
+         * // Convert the TokenResponse object to JSON
+         * ObjectMapper objectMapper = new ObjectMapper();
+         * String jsonResponse = objectMapper.writeValueAsString(responseBody);
+         * 
+         * // Set the response content type and write the response body
+         * response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+         * response.getOutputStream().write(jsonResponse.getBytes(StandardCharsets.UTF_8
+         * ));
+         * response.getOutputStream().flush();
+         */
 
         // Pass the token to the controller via a request attribute
         request.setAttribute("newToken", newToken);
-        
+
+      } else {
+        String errorMessage = jwtUtils.getValidateJwtTokenError(jwt);
+        handleInvalidJwtToken(request, response, errorMessage);
+        return;
       }
     } catch (Exception e) {
       logger.error("Cannot set user authentication: {}", e);
     }
 
     filterChain.doFilter(request, response);
+  }
+
+  private void handleInvalidJwtToken(HttpServletRequest request, HttpServletResponse response, String errorMessage)
+      throws IOException {
+    try {
+      // set appropriate status code
+      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+      // Create a response map with the error message
+      Map<String, Object> responseBody = new HashMap<>();
+      responseBody.put("message", errorMessage);
+      responseBody.put("status", "error");
+      responseBody.put("data", new ArrayList<>());
+
+      // Set the response content type and write the response body
+      response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+      response.getWriter().write(new ObjectMapper().writeValueAsString(responseBody));
+      response.getWriter().flush();
+    } catch (Exception e) {
+      logger.error("Cannot set user authentication: {}", e);
+    }
   }
 
   private String parseJwt(HttpServletRequest request) {
